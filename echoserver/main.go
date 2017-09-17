@@ -76,6 +76,17 @@ func connectToRelay(ip, port string) (net.Conn, error) {
     panic(fmt.Sprintf("%s: %v","Relay connection failure: ",err))
   }
   relayConn = conn
+
+  go func() {
+    buf := bufio.NewReader(conn)
+    for {
+        msg,_ := buf.ReadString('\n')
+        if len(msg)>0 {
+            fmt.Printf(">>%s\n",string(msg))
+        }
+    }
+  }()
+
   return relayConn, nil
 }
 
@@ -105,7 +116,7 @@ func handleConns(l net.Listener) chan net.Conn {
             i++
             fmt.Printf("%d: %v accepted %v\n", i, client.LocalAddr(), client.RemoteAddr())
             conn_pool[fmt.Sprintf("%v",client.RemoteAddr())] = &client
-            client.Write([]byte("Welcome to relay utopia\n"))
+            client.Write([]byte("Welcome to echoserver utopia\n"))
             handleEvent( Event{Name:"CONNECT_EVENT", Client:client})
             ch <- client
         }
@@ -133,6 +144,12 @@ func handleEvent(e Event ) {
           msg := fmt.Sprintf("ECHO>>%v:%s",e.Client.RemoteAddr(), string(e.Msg))
           conn.Write([]byte(msg))
         }
+      }
+    case "RELAY_MSG" :
+      for _,c := range conn_pool {
+        conn := *c
+        msg := fmt.Sprintf("RELAY>>%v:%s",e.Client.RemoteAddr(), string(e.Msg))
+        conn.Write([]byte(msg))
       }
     default:
   }
