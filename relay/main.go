@@ -91,7 +91,7 @@ func handleEvent(e Event ) {
         addr := fmt.Sprintf("%v",e.Client.RemoteAddr())
         conn := *c
         if fmt.Sprintf("%v",conn.RemoteAddr()) != addr {
-          msg := fmt.Sprintf("RELAY>>%v:%s",e.Client.RemoteAddr(), string(e.Msg))
+          msg := fmt.Sprintf("SEND TO:%v: MESSAGE:%s",e.Client.RemoteAddr(), string(e.Msg))
           conn.Write([]byte(msg))
         }
       }
@@ -106,8 +106,7 @@ func handleConn(c net.Conn) {
         if err != nil {
             break
         }
-        fmt.Printf("%v:%s",c.RemoteAddr(),string(msg))
-        c.Write(msg)
+        fmt.Printf("RECEIVE>> Addr:%v Data:%s",c.RemoteAddr(),string(msg))
         handleEvent( Event{Name:"CLIENT_MSG", Client:c, Msg:msg})
     }
 }

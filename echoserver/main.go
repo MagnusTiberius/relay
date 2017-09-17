@@ -49,17 +49,16 @@ func setupListener(ip string , sport string) {
   nport,_ := strconv.Atoi(sport)
   n := nport + 1
   addr := fmt.Sprintf("%s:%d", ip, n)
-  fmt.Println("Relay connection: "+addr)
   server, err := net.Listen("tcp", addr)
   for err != nil {
     n = n + 1
     addr = fmt.Sprintf("%s:%d", ip, n)
-    fmt.Println("Relay connection: "+addr)
     server, err = net.Listen("tcp", addr)
   }
   if server == nil {
       panic(fmt.Sprintf("%s: %v","Listen failure: ",err))
   }
+  fmt.Println("Relay connection: "+addr)
   conn_pool = map[string] *net.Conn{}
   conns := handleConns(server)
   for {
@@ -83,6 +82,7 @@ func connectToRelay(ip, port string) (net.Conn, error) {
         msg,_ := buf.ReadString('\n')
         if len(msg)>0 {
             fmt.Printf(">>%s\n",string(msg))
+            //handleEvent( Event{Name:"RELAY_MSG", Client:conn, Msg:[]byte(msg)})
         }
     }
   }()
@@ -148,7 +148,7 @@ func handleEvent(e Event ) {
     case "RELAY_MSG" :
       for _,c := range conn_pool {
         conn := *c
-        msg := fmt.Sprintf("RELAY>>%v:%s",e.Client.RemoteAddr(), string(e.Msg))
+        msg := fmt.Sprintf("RELAY>>%v:%s\n",e.Client.RemoteAddr(), string(e.Msg))
         conn.Write([]byte(msg))
       }
     default:
