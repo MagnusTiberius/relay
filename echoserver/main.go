@@ -81,8 +81,8 @@ func connectToRelay(ip, port string) (net.Conn, error) {
     for {
         msg,_ := buf.ReadString('\n')
         if len(msg)>0 {
-            fmt.Printf(">>%s\n",string(msg))
-            //handleEvent( Event{Name:"RELAY_MSG", Client:conn, Msg:[]byte(msg)})
+            fmt.Printf("Msg:%s\n",string(msg))
+            handleEvent( Event{Name:"RELAY_MSG", Client:conn, Msg:[]byte(msg)})
         }
     }
   }()
@@ -147,9 +147,9 @@ func handleEvent(e Event ) {
       }
     case "RELAY_MSG" :
       for _,c := range conn_pool {
-        conn := *c
+        client := *c
         msg := fmt.Sprintf("RELAY>>%v:%s\n",e.Client.RemoteAddr(), string(e.Msg))
-        conn.Write([]byte(msg))
+        client.Write([]byte(msg))
       }
     default:
   }
@@ -157,8 +157,9 @@ func handleEvent(e Event ) {
 }
 
 func relayEvent(e Event ) {
-  msg := fmt.Sprintf("RELAY>>%v:%s",e.Client.RemoteAddr(), string(e.Msg))
-  relayConn.Write([]byte(msg))
+  //msg := fmt.Sprintf("CLIENT>>%v:%s",e.Client.RemoteAddr(), string(e.Msg))
+  //relayConn.Write([]byte(msg))
+  relayConn.Write(e.Msg)
 }
 
 func handleConn(c net.Conn) {
